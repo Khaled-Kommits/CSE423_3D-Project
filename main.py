@@ -28,10 +28,17 @@ rock_positions = [(random.randint(-GRID_LENGTH + 10, GRID_LENGTH - 10),random.ra
     for _ in range(NUM_ROCKS)]
 
 #Water
-WATER_HEIGHT   = 300
+WATER_HEIGHT   = 600
 WAVE_AMPLITUDE = 6
 WAVE_FREQ      = 0.8
 WAVE_SUBDIV    = 28
+
+fp_active = False
+camera = [0.0, 0.0]
+EYE_HEIGHT = 100
+FP_SPEED   = 25.0
+FP_ANGLE   = 0.0
+ROT_SPEED  = 5.0
 
 def draw_coral(x, y, heights):
     glPushMatrix()
@@ -132,19 +139,59 @@ def draw_shapes():
 def setupCamera():
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
-    gluPerspective(fovY, 1.25, 0.1, 2000)  
+    gluPerspective(fovY, 1.25, 0.1, 2000)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
-    global camera_radius, camera_angle, camera_height
+    global camera_radius, camera_angle, camera_height, fp_active, camera
 
-    cam_x = camera_radius * math.cos(math.radians(camera_angle))
-    cam_y = camera_radius * math.sin(math.radians(camera_angle))
-    cam_z = camera_height
+    if fp_active:
+       eye_x, eye_y, eye_z = camera[0], camera[1], EYE_HEIGHT
 
-    gluLookAt(cam_x, cam_y, cam_z, 0, 0, 0, 0, 0, 1)
+       rad = math.radians(FP_ANGLE)
+       center_x = eye_x + math.cos(rad) * 200
+       center_y = eye_y + math.sin(rad) * 200
+       center_z = eye_z
 
+       gluLookAt(eye_x, eye_y, eye_z,
+              center_x, center_y, center_z,
+              0, 0, 1)
+    else:
+        cam_x = camera_radius * math.cos(math.radians(camera_angle))
+        cam_y = camera_radius * math.sin(math.radians(camera_angle))
+        cam_z = camera_height
+        gluLookAt(cam_x, cam_y, cam_z, 0, 0, 0, 0, 0, 1)
 
+def keyboardListener(key, x, y):
+    global camera, fp_active, FP_ANGLE, trash_items
+
+    if key == b'f':
+        fp_active = not fp_active  # Toggle first-person mode
+        return
+
+    if not fp_active:
+        return
+
+    rad = math.radians(FP_ANGLE)
+    dx = math.cos(rad)
+    dy = math.sin(rad)
+
+    if key == b'w':
+        camera[0] += dx * FP_SPEED
+        camera[1] += dy * FP_SPEED
+    elif key == b's':
+        camera[0] -= dx * FP_SPEED
+        camera[1] -= dy * FP_SPEED
+    elif key == b'a':
+        FP_ANGLE += ROT_SPEED
+    elif key == b'd':
+        FP_ANGLE -= ROT_SPEED
+
+    # Clamp inside grid
+    half = GRID_LENGTH
+    margin = 10
+    camera[0] = max(-half + margin, min(half - margin, camera[0]))
+    camera[1] = max(-half + margin, min(half - margin, camera[1]))
 
 def specialKeyListener(key, x, y):
     global camera_height, camera_angle
@@ -192,6 +239,7 @@ def main():
     glutInitWindowPosition(0, 0)
     glutCreateWindow(b"3D Ocean Visualizer - Floor, Corals, Rocks & Water")
     glutDisplayFunc(showScreen)
+    glutKeyboardFunc(keyboardListener)
     glutSpecialFunc(specialKeyListener)
 
     glutIdleFunc(idle)
