@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-=======
+
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
@@ -496,4 +495,3 @@ def main():
 
 if __name__ == "__main__":
     main()
->>>>>>> 4f2a5e3 (Final Commit)
