@@ -307,14 +307,6 @@ def keyboardListener(key, x, y):
         fp_active = not fp_active  # first-person mode
         return
     elif key == b'c':
-        draw_trash_enabled = not draw_trash_enabled  # trash clean
-        fp_active = not fp_active  
-        return
-    elif key == b'c':
-        draw_trash_enabled = not draw_trash_enabled  
-        fp_active = not fp_active  # Toggle first-person mode
-        return
-    elif key == b'c':
         draw_trash_enabled = not draw_trash_enabled  # toggle drawing
 
         return
