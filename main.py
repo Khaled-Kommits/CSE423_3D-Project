@@ -40,54 +40,8 @@ FP_SPEED   = 25.0
 FP_ANGLE   = 0.0
 ROT_SPEED  = 5.0
 
-##feature2 fish 
-# Max number of fish
-MAX_FISH = 25
-fish_list = []
-
-# Fish settings (size, speed range)
-FISH_SIZE_MIN = 10
-FISH_SIZE_MAX = 40
-FISH_SPEED_LIST = [0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0]  # Speed list from slow to fast
-
-## feature 5 (day/night and bioluminicent fish)
-# Mode flag (Day or Night)
-is_night_mode = False
-
-# Colors for Day Mode (excluding neon blue, neon green, and neon purple)
-day_colors = [
-    (0.5, 0.5, 0.0),    # olive
-    (1.0, 0.5, 0.0),  # Bright Orange
-    (1.0, 1.0, 0.0), # Bright Yellow
-    (0.5, 0.0, 0.0),   #maroon
-  ]
-
-# Non-neon colors for Tail in Day Mode
-tail_colors =[
-    (0, 0.75, 0), # Light Green
-    (.75,.25,0) ,# Light Orange
-    (.75,.75,0) ,# Light Yellow
-    (0.0, 0.5, 0.5) # Teal
-
-
-]
-
-# Neon Colors for Night Mode
-neon_colors = [
-    (0.0, 0.3, 1.0),  # Deep Sea Blue
-    (0.0, 0.9, 1.0),  # Cyan Glow 
-    (0.0, 1.0, 0.7),  # Aqua Neon
-    (0.2, 0.6, 1.0),  # Electric Blue
-    (0.5, 1.0, 0.3),  # Glow Green
-    (0.6, 1.0, 0.0),  # Neon Lime
-    (0.7, 0.3, 1.0),  # Purple Glow 
-    (1.0, 0.0, 0.8),  # Magenta Neon
-    (0.25, 1.0, 0.85), # Turquoise Glow
-    (0.8, 0.4, 1.0)   # Radiant Violet
-]
-
 #Trash cleaning
-TRASH_SPAWN_INTERVAL_MS =8000
+TRASH_SPAWN_INTERVAL_MS =7000
 TRASH_MARGIN = 40 
 trash_items = [] 
 trash_created_count = 0 
