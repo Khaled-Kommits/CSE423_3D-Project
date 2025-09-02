@@ -41,7 +41,7 @@ FP_ANGLE   = 0.0
 ROT_SPEED  = 5.0
 
 #Trash cleaning
-TRASH_SPAWN_INTERVAL_MS =8000
+TRASH_SPAWN_INTERVAL_MS =7000
 TRASH_MARGIN = 40 
 trash_items = [] 
 trash_created_count = 0 
@@ -199,7 +199,7 @@ def spawn_trash_once():
 def trash_cleaning():
     global _last_trash_spawn_ms
     if not draw_trash_enabled:
-        return  # skip drawing and spawning when disabled
+        return  
 
     now = get_time_ms()
     if now - _last_trash_spawn_ms >= TRASH_SPAWN_INTERVAL_MS:
@@ -256,10 +256,10 @@ def keyboardListener(key, x, y):
     global camera, fp_active, FP_ANGLE, trash_items,draw_trash_enabled
 
     if key == b'f':
-        fp_active = not fp_active  # Toggle first-person mode
+        fp_active = not fp_active  # first-person mode
         return
     elif key == b'c':
-        draw_trash_enabled = not draw_trash_enabled  # toggle drawing
+        draw_trash_enabled = not draw_trash_enabled  # trash clean
         return
 
     if not fp_active:
