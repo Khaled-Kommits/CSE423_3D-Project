@@ -1,3 +1,4 @@
+##feature 2 and 5
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
@@ -44,7 +45,7 @@ FISH_SPEED_LIST = [0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0]  # Speed list from slow t
 
 # Camera movement speed
 camera_speed = 10.0
-## feature 3 (day/night and bioluminicent fish)
+## feature 5(day/night and bioluminicent fish)
 # Mode flag (Day or Night)
 is_night_mode = False
 
