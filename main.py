@@ -689,26 +689,6 @@ def keyboardListener(key, x, y):
             fish["tail_color"] = random.choice(neon_colors)
 
 
-
-
-def keyboardListener(key, x, y):
-    """
-    Toggle the camera view when 'C' key is pressed and move the camera with arrow keys
-    """
-    global is_night_mode
-    if key == b'd' or key == b'D':  # Switch to day mode
-        is_night_mode = False
-        # Update all existing fish colors to their day mode colors
-        for fish in fish_list:
-            fish["body_color"] = random.choice(day_colors)
-            fish["tail_color"] = random.choice(tail_colors)
-    elif key == b'n' or key == b'N':  # Switch to night mode
-        is_night_mode = True
-        # Update all existing fish colors to neon colors
-        for fish in fish_list:
-            fish["body_color"] = random.choice(neon_colors)
-            fish["tail_color"] = random.choice(neon_colors)
-
 def handle_special_keys(key, x, y):
     global camera_orbit_degrees, camera_elevation
     if key == GLUT_KEY_UP: 
