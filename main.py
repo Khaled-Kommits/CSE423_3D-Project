@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3230e63b20f4acb6f399b20f1c2a9053135304ba
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
@@ -44,10 +48,10 @@ ROT_SPEED  = 5.0
 MAX_FISH = 25
 fish_list = []
 
-# Fish settings (size, speed range)
+# Fish settings 
 FISH_SIZE_MIN = 10
 FISH_SIZE_MAX = 40
-FISH_SPEED_LIST = [0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0]  # Speed list from slow to fast
+FISH_SPEED_LIST = [0.05, 0.1, 0.2, 0.3, 0.5, 0.7, 1.0]  
 
 ## feature 5 (day/night and bioluminicent fish)
 # Mode flag (Day or Night)
@@ -413,6 +417,7 @@ def keyboardListener(key, x, y):
             fish["tail_color"] = random.choice(neon_colors)
 
     if key == b'f':
+<<<<<<< HEAD
         fp_active = not fp_active  # Toggle first-person mode
         return
     elif key == b'c':
@@ -420,6 +425,12 @@ def keyboardListener(key, x, y):
 
         return
 
+=======
+        fp_active = not fp_active  # first-person mode
+        return
+    elif key == b'c':
+        draw_trash_enabled = not draw_trash_enabled  # trash clean
+>>>>>>> 3230e63b20f4acb6f399b20f1c2a9053135304ba
     if not fp_active:
         return
 
@@ -535,5 +546,8 @@ def main():
 if __name__ == "__main__":
     main()
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 3230e63b20f4acb6f399b20f1c2a9053135304ba
