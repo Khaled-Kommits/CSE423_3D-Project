@@ -40,6 +40,17 @@ FP_SPEED   = 25.0
 FP_ANGLE   = 0.0
 ROT_SPEED  = 5.0
 
+#Trash cleaning
+TRASH_SPAWN_INTERVAL_MS =8000
+TRASH_MARGIN = 40 
+trash_items = [] 
+trash_created_count = 0 
+_last_trash_spawn_ms = 0
+draw_trash_enabled = True
+
+def get_time_ms():
+  return int(time.perf_counter() * 1000)
+
 def draw_coral(x, y, heights):
     glPushMatrix()
     glTranslatef(x, y, 0)
@@ -128,10 +139,89 @@ def draw_water_volume():
             glVertex3f(x0, y1, z01)
     glEnd()
 
+######## feature 8 ###########
+
+def draw_trash_bottle():
+
+    glPushMatrix()
+    glRotatef(90, 1, 0, 0)  
+
+    glColor3f(0.2, 0.8, 0.9)  
+    quad = gluNewQuadric()
+    
+    # body
+    gluCylinder(quad, 3.0, 3.0, 20.0, 12, 6)
+    
+    # neck
+    glTranslatef(0, 0, 20.0)
+    gluCylinder(quad, 1.6, 1.2, 6.0, 10, 4)
+    
+    # cap
+    glTranslatef(0, 0, 6.0)
+    glColor3f(0.5, 0.2, 0.2)
+    glutSolidSphere(1.6, 10, 8)
+
+    glPopMatrix()
+
+def draw_trash_bag():
+#small top nubs as handles
+    glColor3f(0.95, 0.95, 1.0)
+# bag body
+    glPushMatrix()
+    glScalef(10.0, 2.5, 12.0)
+    glutSolidCube(1.0)
+    glPopMatrix()
+# left handle nub
+    glPushMatrix()
+    glTranslatef(-4.5, 0.0, 6.5)
+    glScalef(2.0, 1.2, 2.0)
+    glutSolidCube(1.0)
+    glPopMatrix()
+# right handle nub
+    glPushMatrix()
+    glTranslatef(4.5, 0.0, 6.5)
+    glScalef(2.0, 1.2, 2.0)
+    glutSolidCube(1.0)
+    glPopMatrix()
+
+
+def spawn_trash_once():
+    global trash_created_count
+
+    x = random.randint(-GRID_LENGTH + TRASH_MARGIN, GRID_LENGTH - TRASH_MARGIN)
+    y = random.randint(-GRID_LENGTH + TRASH_MARGIN, GRID_LENGTH - TRASH_MARGIN)
+    type_id = random.randint(0, 1) # 0=bottle, 1=bag
+    rot_deg = random.uniform(0, 360)
+    scale = random.uniform(0.8, 1.6)
+    trash_items.append((x, y, type_id, rot_deg, scale))
+    trash_created_count += 1
+
+def trash_cleaning():
+    global _last_trash_spawn_ms
+    if not draw_trash_enabled:
+        return  # skip drawing and spawning when disabled
+
+    now = get_time_ms()
+    if now - _last_trash_spawn_ms >= TRASH_SPAWN_INTERVAL_MS:
+        spawn_trash_once()
+        _last_trash_spawn_ms = now
+
+    # draw all trash
+    for (tx, ty, type_id, rot, s) in trash_items:
+        glPushMatrix()
+        glTranslatef(tx, ty, 0.0)
+        glRotatef(rot, 0, 0, 1)
+        glScalef(s, s, s)
+        if type_id == 0:
+            draw_trash_bottle()
+        else:
+            draw_trash_bag()
+        glPopMatrix()
 
 def draw_shapes():
     draw_water_volume()
     draw_ocean_objects()
+    trash_cleaning()
 
 
 ########### Feature 7 ###############
@@ -163,10 +253,13 @@ def setupCamera():
         gluLookAt(cam_x, cam_y, cam_z, 0, 0, 0, 0, 0, 1)
 
 def keyboardListener(key, x, y):
-    global camera, fp_active, FP_ANGLE, trash_items
+    global camera, fp_active, FP_ANGLE, trash_items,draw_trash_enabled
 
     if key == b'f':
         fp_active = not fp_active  # Toggle first-person mode
+        return
+    elif key == b'c':
+        draw_trash_enabled = not draw_trash_enabled  # toggle drawing
         return
 
     if not fp_active:
