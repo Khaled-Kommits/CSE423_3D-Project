@@ -8,10 +8,31 @@ import math, time
 # Camera-related variables
 camera_pos = [0, 500, 500]  # Default camera position (Third-Person View)
 fovY = 130  # Field of view
-GRID_LENGTH = 800  # Length of grid lines
+GRID_LENGTH = 600  # Length of grid lines
 camera_orbit_degrees = 0.0  # Horizontal rotation (camera orbit)
-camera_elevation = 650.0  # Vertical camera angle (elevation)
+camera_elevation = 30.0  # Vertical camera angle (elevation)
 
+##### Feature 1 #####
+#Corals
+coral_offsets = [(-3,  2,  0),(10,  5, 0),(23,  0.8, 0)]
+
+coral_color_y = [0, 0, 0.3]
+coral_color_z = [0.2, 0.18, 0.19]
+NUM_CORALS = 30
+coral_positions = [(random.randint(-GRID_LENGTH + 10, GRID_LENGTH - 10),random.randint(-GRID_LENGTH + 10, GRID_LENGTH - 10))
+    for _ in range(NUM_CORALS)]
+CORAL_HEIGHTS = [50, 67, 35]
+
+#Rocks
+NUM_ROCKS = 20
+rock_positions = [(random.randint(-GRID_LENGTH + 10, GRID_LENGTH - 10),random.randint(-GRID_LENGTH + 10, GRID_LENGTH - 10))
+    for _ in range(NUM_ROCKS)]
+
+#Water
+WATER_HEIGHT   = 300
+WAVE_AMPLITUDE = 6
+WAVE_FREQ      = 0.8
+WAVE_SUBDIV    = 28
 ##feature2 fish 
 # Max number of fish
 MAX_FISH = 25
@@ -61,6 +82,35 @@ neon_colors = [
 ]
 
 
+def draw_coral(x, y, heights):
+    glPushMatrix()
+    glTranslatef(x, y, 0)
+    glScalef(2.0, 2.0, 2.0)
+    for i in range(3):
+        ox, oy, oz = coral_offsets[i]
+        glPushMatrix()
+        glTranslatef(ox, oy, oz)
+        glColor3f(1, coral_color_y[i], coral_color_z[i])
+        gluCylinder(gluNewQuadric(), 8, 4, heights[i], 5, 4)
+        glPopMatrix()
+    glPopMatrix()
+
+def draw_rock(x, y):
+    glPushMatrix()
+    glTranslatef(x, y, 16)
+    glScalef(1.5,1.5,1.0)
+    glColor3f(0.5, 0.5, 0.5)
+    glutSolidCube(30)
+    glTranslatef(0, 0, 25)
+    glColor3f(0.55, 0.5, 0.5)
+    glutSolidCube(20)
+    glPopMatrix()
+
+def draw_ocean_objects():
+    for (cx, cy) in coral_positions:
+        draw_coral(cx, cy, CORAL_HEIGHTS)
+    for (rx, ry) in rock_positions:
+        draw_rock(rx, ry)
 
 def draw_water_volume():
     half = GRID_LENGTH
@@ -125,9 +175,12 @@ def draw_water_volume():
             glVertex3f(x0, y1, z01)
     glEnd()
 
+
 def draw_shapes():
     draw_water_volume()
     draw_ocean_objects()
+
+
 def draw_fish(x, y, z, size, speed, body_color, tail_color, rotation):
     # Draw fish body (sphere)
     glPushMatrix()
@@ -209,33 +262,23 @@ def generate_fish(x, y, z):
             "tail_color": tail_color, "rotation": rotation}
     fish_list.append(fish)
 
+
 def setupCamera():
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     # Make the camera's FOV wide and adjust near/far clipping planes
-    gluPerspective(fovY, 1.25, 0.1, 2000)  # Set near clipping to 1.0, far clipping to 1500
+    gluPerspective(fovY, 1.25, 1.0, 1500)  # Set near clipping to 1.0, far clipping to 1500
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
 
     # Calculate camera position based on orbit and elevation
     orbit_x = math.cos(math.radians(camera_orbit_degrees)) * 500
     orbit_y = math.sin(math.radians(camera_orbit_degrees)) * 500
-    camera_pos[0] = orbit_x # Update camera X based on orbit
+    camera_pos[0] = orbit_x  # Update camera X based on orbit
     camera_pos[2] = camera_elevation  # Update camera Z based on orbit
     camera_pos[1] = orbit_y  # Update camera Y based on elevation
 
     gluLookAt(camera_pos[0], camera_pos[1], camera_pos[2], 0, 0, 0, 0, 0, 1)  # Camera behind fish, looking at origin
-
-def handle_special_keys(key, x, y):
-    global camera_orbit_degrees, camera_elevation
-    if key == GLUT_KEY_UP: 
-        camera_elevation += 20.0  # Move the camera up (increase elevation)
-    elif key == GLUT_KEY_DOWN: 
-        camera_elevation -= 20.0  # Move the camera down (decrease elevation)
-    elif key == GLUT_KEY_LEFT: 
-        camera_orbit_degrees -= 5.0  # Rotate camera left
-    elif key == GLUT_KEY_RIGHT: 
-        camera_orbit_degrees += 5.0  # Rotate camera right
 
 def showScreen():
     # Set background color depending on day or night mode
@@ -301,3 +344,49 @@ def keyboardListener(key, x, y):
 
 
 
+
+def keyboardListener(key, x, y):
+    """
+    Toggle the camera view when 'C' key is pressed and move the camera with arrow keys
+    """
+    global is_night_mode
+    if key == b'd' or key == b'D':  # Switch to day mode
+        is_night_mode = False
+        # Update all existing fish colors to their day mode colors
+        for fish in fish_list:
+            fish["body_color"] = random.choice(day_colors)
+            fish["tail_color"] = random.choice(tail_colors)
+    elif key == b'n' or key == b'N':  # Switch to night mode
+        is_night_mode = True
+        # Update all existing fish colors to neon colors
+        for fish in fish_list:
+            fish["body_color"] = random.choice(neon_colors)
+            fish["tail_color"] = random.choice(neon_colors)
+
+def handle_special_keys(key, x, y):
+    global camera_orbit_degrees, camera_elevation
+    if key == GLUT_KEY_UP: 
+        camera_elevation += 15.0  # Move the camera up (increase elevation)
+    elif key == GLUT_KEY_DOWN: 
+        camera_elevation -= 15.0  # Move the camera down (decrease elevation)
+    elif key == GLUT_KEY_LEFT: 
+        camera_orbit_degrees -= 2.0  # Rotate camera left
+    elif key == GLUT_KEY_RIGHT: 
+        camera_orbit_degrees += 2.0  # Rotate camera right
+
+def main():
+    glutInit()
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH)
+    glutInitWindowSize(1000, 800)
+    glutInitWindowPosition(0, 0)
+    wind = glutCreateWindow(b"3D Fish Example")
+    glutDisplayFunc(showScreen)
+    glutSpecialFunc(handle_special_keys)
+    glutMouseFunc(mouseListener)
+    glutKeyboardFunc(keyboardListener)  # Add keyboard listener for day/night mode
+    glutIdleFunc(idle)  # Register the idle function to move the fish automatically
+    glEnable(GL_DEPTH_TEST)  # Enable depth testing for proper 3D rendering
+    glutMainLoop()
+
+if __name__ == "__main__":
+    main()
