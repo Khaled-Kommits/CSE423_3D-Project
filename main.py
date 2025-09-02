@@ -75,13 +75,13 @@ tail_colors =[
 
 # Neon Colors for Night Mode
 neon_colors = [
-    (0.0, 0.3, 1.0),  # Deep Sea Blue (Jellyfish glow)
-    (0.0, 0.9, 1.0),  # Cyan Glow (Dinoflagellates)
+    (0.0, 0.3, 1.0),  # Deep Sea Blue
+    (0.0, 0.9, 1.0),  # Cyan Glow 
     (0.0, 1.0, 0.7),  # Aqua Neon
     (0.2, 0.6, 1.0),  # Electric Blue
-    (0.5, 1.0, 0.3),  # Glow Green (Firefly)
+    (0.5, 1.0, 0.3),  # Glow Green
     (0.6, 1.0, 0.0),  # Neon Lime
-    (0.7, 0.3, 1.0),  # Purple Glow (Deep-sea squid)
+    (0.7, 0.3, 1.0),  # Purple Glow 
     (1.0, 0.0, 0.8),  # Magenta Neon
     (0.25, 1.0, 0.85), # Turquoise Glow
     (0.8, 0.4, 1.0)   # Radiant Violet
@@ -278,81 +278,76 @@ def draw_shapes():
 
 ########feature 2 Fish ########
 def draw_fish(x, y, z, size, speed, body_color, tail_color, rotation):
-    # Draw fish body (sphere)
+    # Draw fish body 
     glPushMatrix()
-    glTranslatef(x, y, z)  # Position at the origin
-    glColor3f(body_color[0], body_color[1], body_color[2])  # Fish body color
-    gluSphere(gluNewQuadric(), size, 20, 20)  # Adjusted for a more realistic body shape
+    glTranslatef(x, y, z) 
+    glColor3f(body_color[0], body_color[1], body_color[2]) 
+    gluSphere(gluNewQuadric(), size, 20, 20) 
     glPopMatrix()
 
     # Draw fish tail (cylinder)
     glPushMatrix()
-    glTranslatef(x + size, y, z)  # Move the tail to the right of the body
-    glRotatef(rotation, 0, 1, 0)  # Rotate based on fish's facing direction
-    glColor3f(tail_color[0], tail_color[1], tail_color[2])  # Tail color (different from body)
-    gluCylinder(gluNewQuadric(), size // 4, size // 6, size * 0.75, 10, 10)  # Tail dimensions
+    glTranslatef(x + size, y, z)  
+    glRotatef(rotation, 0, 1, 0)  
+    glColor3f(tail_color[0], tail_color[1], tail_color[2])  
+    gluCylinder(gluNewQuadric(), size // 4, size // 6, size * 0.75, 10, 10) 
     glPopMatrix()
 
-    # Draw fish fins (two small spheres for simplicity)
+    # Draw fish fins 
     glPushMatrix()
-    glTranslatef(x - size * 0.5, y + size * 0.5, z)  # Front fin position
-    glColor3f(tail_color[0], tail_color[1], tail_color[2] )  # Fins color (same as tail)
-    gluSphere(gluNewQuadric(), size * 0.3, 10, 10)  # Fin size
-    glPopMatrix()
-
-    glPushMatrix()
-    glTranslatef(x - size * 0.5, y - size * 0.5, z)  # Back fin position
-    glColor3f(tail_color[0], tail_color[1], tail_color[2] )  # Fins color (same as tail)
-    gluSphere(gluNewQuadric(), size * 0.3, 10, 10)  # Fin size
-    glPopMatrix()
-
-    # Draw fish eye (black sphere)
-    glPushMatrix()
-    glTranslatef(x + size * 0.5, y + size * 0.5, z + size * 0.5)  # Eye position inside the fish body
-    glColor3f(0, 0, 0)  # Black color for the eye
-    gluSphere(gluNewQuadric(), size * 0.15, 10, 10)  # Adjusted eye size based on fish size
+    glTranslatef(x - size * 0.5, y + size * 0.5, z)  
+    glColor3f(tail_color[0], tail_color[1], tail_color[2] )  
+    gluSphere(gluNewQuadric(), size * 0.3, 10, 10)  
     glPopMatrix()
 
     glPushMatrix()
-    glTranslatef(x + size * 0.5, y - size * 0.5, z + size * 0.5)  # Eye position inside the fish body
-    glColor3f(0, 0, 0)  # Black color for the eye
-    gluSphere(gluNewQuadric(), size * 0.15, 10, 10)  # Adjusted eye size based on fish size
+    glTranslatef(x - size * 0.5, y - size * 0.5, z)  
+    glColor3f(tail_color[0], tail_color[1], tail_color[2] ) 
+    gluSphere(gluNewQuadric(), size * 0.3, 10, 10) 
+    glPopMatrix()
+
+    glPushMatrix()
+    glTranslatef(x + size * 0.5, y + size * 0.5, z + size * 0.5)  
+    glColor3f(0, 0, 0)  
+    gluSphere(gluNewQuadric(), size * 0.15, 10, 10)  
+    glPopMatrix()
+
+    glPushMatrix()
+    glTranslatef(x + size * 0.5, y - size * 0.5, z + size * 0.5)  
+    glColor3f(0, 0, 0)  
+    gluSphere(gluNewQuadric(), size * 0.15, 10, 10)  
     glPopMatrix()
 
 
 def update_fish_positions():
     global fish_list
     for fish in fish_list:
-        # Move fish in the direction of its head (based on rotation)
         radians = math.radians(fish["rotation"])
-        fish["x"] += (fish["speed"] / 20.0) * math.cos(radians)  # Move along X axis (slow down by 20 times)
-        fish["z"] += (fish["speed"] / 20.0) * math.sin(radians)  # Move along Z axis (slow down by 20 times
+        fish["x"] += (fish["speed"] / 20.0) * math.cos(radians) 
+        fish["z"] += (fish["speed"] / 20.0) * math.sin(radians)  
         
-        # Add some boundary checks (if they go too far, change direction)
         if fish["x"] < -GRID_LENGTH + fish["size"] or fish["x"] > GRID_LENGTH - fish['size']:
-            fish["rotation"] += 180  # Reverse direction on X-axis
+            fish["rotation"] += 180  
 
         if fish["z"] < fish["size"] or fish["z"] > GRID_LENGTH // 2:
-            fish["rotation"] += 180  # Reverse direction on Z-axis
+            fish["rotation"] += 180  
 
     # Limit the number of fish
     if len(fish_list) > MAX_FISH:
-        fish_list.pop(0)  # Remove the oldest fish if max fish count is exceeded
+        fish_list.pop(0)  
 
 def generate_fish(x, y, z):
-    # Generate fish with random properties
     size = random.randint(FISH_SIZE_MIN, FISH_SIZE_MAX)
-    speed = random.choice(FISH_SPEED_LIST)  # Choose a random speed
+    speed = random.choice(FISH_SPEED_LIST)  
     
-    # In day mode, choose from predefined colors
     if not is_night_mode:
-        body_color = random.choice(day_colors)  # Random color from the day colors list
-        tail_color = random.choice(tail_colors)  # Tail color (different from body)
+        body_color = random.choice(day_colors)  
+        tail_color = random.choice(tail_colors)  
     else:
-        body_color = random.choice(neon_colors)  # Neon color in night mode
-        tail_color = random.choice(neon_colors)  # Tail color (neon too in night mode)
+        body_color = random.choice(neon_colors)  
+        tail_color = random.choice(neon_colors)
 
-    rotation = random.randint(0, 360)  # Random direction (0 to 360 degrees)
+    rotation = random.randint(0, 360)  
 
     fish = {"x": x, "y": y, "z": z, "size": size, "speed": speed, "body_color": body_color, 
             "tail_color": tail_color, "rotation": rotation}
@@ -391,24 +386,22 @@ def setupCamera():
 
 def keyboardListener(key, x, y):
     global camera, fp_active, FP_ANGLE, trash_items,draw_trash_enabled,is_night_mode
-    if key == b'd' or key == b'D':  # Switch to day mode
+    if key == b'd' or key == b'D': 
         is_night_mode = False
-        # Update all existing fish colors to their day mode colors
         for fish in fish_list:
             fish["body_color"] = random.choice(day_colors)
             fish["tail_color"] = random.choice(tail_colors)
-    elif key == b'n' or key == b'N':  # Switch to night mode
+    elif key == b'n' or key == b'N': 
         is_night_mode = True
-        # Update all existing fish colors to neon colors
         for fish in fish_list:
             fish["body_color"] = random.choice(neon_colors)
             fish["tail_color"] = random.choice(neon_colors)
 
     if key == b'f':
-        fp_active = not fp_active  # Toggle first-person mode
+        fp_active = not fp_active  
         return
     elif key == b'c':
-        draw_trash_enabled = not draw_trash_enabled  # toggle drawing
+        draw_trash_enabled = not draw_trash_enabled  
         return
 
     if not fp_active:
@@ -429,7 +422,6 @@ def keyboardListener(key, x, y):
     elif key == b'd':
         FP_ANGLE -= ROT_SPEED
 
-    # Clamp inside grid
     half = GRID_LENGTH
     margin = 10
     camera[0] = max(-half + margin, min(half - margin, camera[0]))
@@ -447,18 +439,15 @@ def specialKeyListener(key, x, y):
         camera_angle += 5
 
 def mouseListener(button, state, x, y):
-    """
-    Generates a new fish when clicked at a random position on the screen
-    """
     if button == GLUT_LEFT_BUTTON and state == GLUT_DOWN:
         rand_x = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
         rand_y = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
-        generate_fish(rand_x, rand_y, 40)  # Generate fish at a random position
+        generate_fish(rand_x, rand_y, 40)  
 
 
 def idle():
 
-    update_fish_positions()  # Update fish positions
+    update_fish_positions()  
     glutPostRedisplay()
 
 def showScreen():
@@ -469,9 +458,9 @@ def showScreen():
     # Ocean floor
     glBegin(GL_QUADS)
     if is_night_mode:
-        glClearColor(0.0, 0.0, 0.0, 1.0)  # Black background for night mode
+        glClearColor(0.0, 0.0, 0.0, 1.0)  
     else:
-        glClearColor(0.51, 0.81, 0.99, 1.0)  # Pale sky blue for day mode
+        glClearColor(0.51, 0.81, 0.99, 1.0)  
 
     glVertex3f(-GRID_LENGTH, -GRID_LENGTH, 0)
     glVertex3f(-GRID_LENGTH, GRID_LENGTH, 0)
