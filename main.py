@@ -41,7 +41,7 @@ FP_ANGLE   = 0.0
 ROT_SPEED  = 5.0
 
 #Trash cleaning
-TRASH_SPAWN_INTERVAL_MS =6500
+TRASH_SPAWN_INTERVAL_MS =3000
 TRASH_MARGIN = 40 
 trash_items = [] 
 trash_created_count = 0 
@@ -81,7 +81,23 @@ FOOD_FALL_SPEED = 1.5
 FOOD_SPAWN_INTERVAL_MS = 3000
 MAX_FOOD_ITEMS = 10
 food_eaten_count =0
+####### feature 12 ###########
+TRASH_CAP_START = 10
+def get_dynamic_max_fish():
+    t = len(trash_items)
+    if t < TRASH_CAP_START:
+        return MAX_FISH
+    steps = 1 + (t - TRASH_CAP_START) // 5   
+    return max(0, MAX_FISH - 5 * steps)
 
+def get_dynamic_max_fish():
+    t = len(trash_items)
+    if t < TRASH_CAP_START:
+        return MAX_FISH
+    steps = 1 + (t - TRASH_CAP_START) // 5   
+    return max(0, MAX_FISH - 5 * steps)
+
+####### feature 10 #########
 def spawn_food():
     if not fish_list:
         rand_x = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
@@ -368,6 +384,10 @@ def update_fish_positions():
             fish["rotation"] += 180  
     if len(fish_list) > MAX_FISH:
         fish_list.pop(0) 
+    # Enforce dynamic cap derived from MAX_FISH and trash count
+    dyn_max = get_dynamic_max_fish()
+    while len(fish_list) > dyn_max:
+        fish_list.pop(0)
 
 def generate_fish(x, y, z):
     # Generate fish 
