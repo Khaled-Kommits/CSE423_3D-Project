@@ -41,7 +41,7 @@ FP_ANGLE   = 0.0
 ROT_SPEED  = 5.0
 
 #Trash cleaning
-TRASH_SPAWN_INTERVAL_MS =7000
+TRASH_SPAWN_INTERVAL_MS =6500
 TRASH_MARGIN = 40 
 trash_items = [] 
 trash_created_count = 0 
@@ -73,6 +73,60 @@ neon_colors = [
     (0.25, 1.0, 0.85), 
     (0.8, 0.4, 1.0)]
 
+##### feature 10 #######
+feeding_mode = False
+food_items = []  #[x, y, z, is_active]
+FOOD_RADIUS = 8
+FOOD_FALL_SPEED = 1.5
+FOOD_SPAWN_INTERVAL_MS = 3000
+MAX_FOOD_ITEMS = 10
+food_eaten_count =0
+
+def spawn_food():
+    if not fish_list:
+        rand_x = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
+        rand_y = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
+    else:
+        fish = random.choice(fish_list)
+        rand_x = fish["x"]
+        rand_y = fish["y"]
+    
+    food_items.append([rand_x, rand_y, WATER_HEIGHT - 20, True])
+
+def update_and_draw_food():
+    global food_items, food_eaten_count
+    if not feeding_mode:
+        return
+    active_food_count = sum(1 for food in food_items if food[3])
+    if active_food_count == 0:
+        food_items.clear()
+        for _ in range(MAX_FOOD_ITEMS):
+            spawn_food()
+
+    for food in food_items:
+        if not food[3]:
+            continue
+        # Move food down
+        food[2] -= FOOD_FALL_SPEED
+        if food[2] <= 0:
+            food[3] = False
+            continue
+        # Draw food
+        glPushMatrix()
+        glTranslatef(food[0], food[1], food[2])
+        glColor3f(1, 0.3, 0.1) 
+        glutSolidSphere(FOOD_RADIUS, 10, 10)
+        glPopMatrix()
+        # Check collision with fish
+        for fish in fish_list:
+            dx = food[0] - fish["x"]
+            dy = food[1] - fish["y"]
+            dz = food[2] - fish["z"]
+            distance = math.sqrt(dx*dx + dy*dy + dz*dz)
+            if distance < fish["size"] + 5:
+                food[3] = False
+                food_eaten_count += 1
+                break
 def get_time_ms():
   return int(time.perf_counter() * 1000)
  
@@ -112,7 +166,6 @@ def draw_water_volume():
     top_z = base_z + WATER_HEIGHT
 
     wall_color = (0.68, 0.85, 0.90)
-
     glColor3f(*wall_color)
     glBegin(GL_QUADS)
     # +X
@@ -120,19 +173,16 @@ def draw_water_volume():
     glVertex3f( half,  half, base_z)
     glVertex3f( half,  half, top_z)
     glVertex3f( half, -half, top_z)
-
     # -X
     glVertex3f(-half, -half, base_z)
     glVertex3f(-half,  half, base_z)
     glVertex3f(-half,  half, top_z)
     glVertex3f(-half, -half, top_z)
-
     # +Y
     glVertex3f(-half,  half, base_z)
     glVertex3f( half,  half, base_z)
     glVertex3f( half,  half, top_z)
     glVertex3f(-half,  half, top_z)
-
     # -Y
     glVertex3f(-half, -half, base_z)
     glVertex3f( half, -half, base_z)
@@ -144,7 +194,6 @@ def draw_water_volume():
     t = time.perf_counter()
     step = (half * 2.0) / float(WAVE_SUBDIV)
     start = -half
-
     glBegin(GL_QUADS)
     for i in range(WAVE_SUBDIV):
         for j in range(WAVE_SUBDIV):
@@ -166,22 +215,17 @@ def draw_water_volume():
     glEnd()
 
 ######## feature 8 ###########
-
 def draw_trash_bottle():
-
     glPushMatrix()
     glRotatef(90, 1, 0, 0)  
 
     glColor3f(0.2, 0.8, 0.9)  
     quad = gluNewQuadric()
-    
     # body
     gluCylinder(quad, 3.0, 3.0, 20.0, 12, 6)
-    
     # neck
     glTranslatef(0, 0, 20.0)
     gluCylinder(quad, 1.6, 1.2, 6.0, 10, 4)
-    
     # cap
     glTranslatef(0, 0, 6.0)
     glColor3f(0.5, 0.2, 0.2)
@@ -210,7 +254,6 @@ def draw_trash_bag():
     glutSolidCube(1.0)
     glPopMatrix()
 
-
 def spawn_trash_once():
     global trash_created_count
 
@@ -226,12 +269,10 @@ def trash_cleaning():
     global _last_trash_spawn_ms
     if not draw_trash_enabled:
         return  
-
     now = get_time_ms()
     if now - _last_trash_spawn_ms >= TRASH_SPAWN_INTERVAL_MS:
         spawn_trash_once()
         _last_trash_spawn_ms = now
-
     # draw all trash
     for (tx, ty, type_id, rot, s) in trash_items:
         glPushMatrix()
@@ -249,17 +290,14 @@ def draw_shapes():
     draw_ocean_objects()
     trash_cleaning()
 
-
 ########### Feature 7 ###############
-
 def setupCamera():
+    global camera_radius, camera_angle, camera_height, fp_active, camera
     glMatrixMode(GL_PROJECTION)
     glLoadIdentity()
     gluPerspective(fovY, 1.25, 0.1, 2000)
     glMatrixMode(GL_MODELVIEW)
     glLoadIdentity()
-
-    global camera_radius, camera_angle, camera_height, fp_active, camera
 
     if fp_active:
        eye_x, eye_y, eye_z = camera[0], camera[1], EYE_HEIGHT
@@ -268,7 +306,6 @@ def setupCamera():
        center_x = eye_x + math.cos(rad) * 200
        center_y = eye_y + math.sin(rad) * 200
        center_z = eye_z
-
        gluLookAt(eye_x, eye_y, eye_z,
               center_x, center_y, center_z,
               0, 0, 1)
@@ -349,7 +386,7 @@ def generate_fish(x, y, z):
 
 
 def keyboardListener(key, x, y):
-    global camera, fp_active, FP_ANGLE, trash_items,draw_trash_enabled, is_night_mode
+    global camera, fp_active, FP_ANGLE, trash_items,draw_trash_enabled, is_night_mode,feeding_mode,_last_trash_spawn_ms
     if key == b'l' :
         is_night_mode = False
         #fish colors to their day mode colorr
@@ -362,11 +399,16 @@ def keyboardListener(key, x, y):
         for fish in fish_list:
             fish["body_color"] = random.choice(neon_colors)
             fish["tail_color"] = random.choice(neon_colors)
+    elif key == b'e':
+       feeding_mode = not feeding_mode
+       return
     if key == b'f':
         fp_active = not fp_active  # first-person mode
         return
     elif key == b'c':
-        draw_trash_enabled = not draw_trash_enabled  # toggle drawing
+        trash_items.clear()
+        draw_trash_enabled = True
+        _last_trash_spawn_ms = get_time_ms() - TRASH_SPAWN_INTERVAL_MS
         return
     if not fp_active:
         return
@@ -385,7 +427,6 @@ def keyboardListener(key, x, y):
         FP_ANGLE += ROT_SPEED
     elif key == b'd':
         FP_ANGLE -= ROT_SPEED
-
     # Clamp inside grid
     half = GRID_LENGTH
     margin = 10
@@ -413,8 +454,6 @@ def idle():
   update_fish_positions() 
   glutPostRedisplay()
 
-
-
 def showScreen():
     if is_night_mode:
         glClearColor(0.0, 0.0, 0.0, 1.0)  # Black background for night mode
@@ -439,6 +478,7 @@ def showScreen():
 
     draw_shapes()
     glEnable(GL_DEPTH_TEST)
+    update_and_draw_food()
     for fish in fish_list:
         draw_fish(fish["x"], fish["y"], fish["z"], fish["size"], fish["speed"], fish["body_color"], fish["tail_color"], fish["rotation"])
     glDisable(GL_DEPTH_TEST)
