@@ -3,7 +3,7 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 import random, math, time
 
-########### Feature 1 ############
+########### Feature 7 ############
 fovY = 130
 camera_radius = 900
 camera_angle  = 0     
@@ -11,7 +11,7 @@ camera_height = 650
 
 GRID_LENGTH = 800
 
-##### Feature 7 #####
+##### Feature 1 #####
 #Corals
 coral_offsets = [(-3,  2,  0),(10,  5, 0),(23,  0.8, 0)]
 
@@ -75,7 +75,8 @@ neon_colors = [
 
 def get_time_ms():
   return int(time.perf_counter() * 1000)
-
+ 
+ ######feature 1 #########
 def draw_coral(x, y, heights):
     glPushMatrix()
     glTranslatef(x, y, 0)
@@ -249,7 +250,7 @@ def draw_shapes():
     trash_cleaning()
 
 
-########### Feature 1 ###############
+########### Feature 7 ###############
 
 def setupCamera():
     glMatrixMode(GL_PROJECTION)
