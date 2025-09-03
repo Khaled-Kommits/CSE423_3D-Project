@@ -81,7 +81,14 @@ _last_shark_spawn_ms = 0
 SHARK_SPEED = 50.0 
 last_update_time = time.perf_counter() 
 
+##### feature 4 #######
+MAX_BUBBLES = 60
+bubble_list = []
 
+BUBBLE_MIN_SIZE = 2
+BUBBLE_MAX_SIZE = 6
+BUBBLE_SPEED = 1.0  
+bubble_speed_multiplier = 1.0
 
 ##### feature 10 #######
 feeding_mode = False
@@ -90,7 +97,6 @@ FOOD_RADIUS = 8
 FOOD_FALL_SPEED = 1.5
 FOOD_SPAWN_INTERVAL_MS = 3000
 MAX_FOOD_ITEMS = 10
-food_eaten_count =0
 ####### feature 12 ###########
 TRASH_CAP_START = 10
 def get_dynamic_max_fish():
@@ -120,7 +126,7 @@ def spawn_food():
     food_items.append([rand_x, rand_y, WATER_HEIGHT - 20, True])
 
 def update_and_draw_food():
-    global food_items, food_eaten_count
+    global food_items
     if not feeding_mode:
         return
     active_food_count = sum(1 for food in food_items if food[3])
@@ -151,7 +157,6 @@ def update_and_draw_food():
             distance = math.sqrt(dx*dx + dy*dy + dz*dz)
             if distance < fish["size"] + 5:
                 food[3] = False
-                food_eaten_count += 1
                 break
 def get_time_ms():
   return int(time.perf_counter() * 1000)
@@ -197,10 +202,8 @@ def draw_water_volume():
         (0.2, 0.4, 0.6),  
         (0.25, 0.5, 0.7), 
         (0.3, 0.6, 0.8),  
-        (0.35, 0.7, 0.9)  
-    ]
+        (0.35, 0.7, 0.9)  ]
 
-    
     for l in range(num_layers):
         base_z = overall_base_z + l * layer_height
         top_z = base_z + layer_height
@@ -211,19 +214,16 @@ def draw_water_volume():
         glVertex3f(half, half, base_z)
         glVertex3f(half, half, top_z)
         glVertex3f(half, -half, top_z)
-
         # -X
         glVertex3f(-half, -half, base_z)
         glVertex3f(-half, half, base_z)
         glVertex3f(-half, half, top_z)
         glVertex3f(-half, -half, top_z)
-
         # +Y
         glVertex3f(-half, half, base_z)
         glVertex3f(half, half, base_z)
         glVertex3f(half, half, top_z)
         glVertex3f(-half, half, top_z)
-
         # -Y
         glVertex3f(-half, -half, base_z)
         glVertex3f(half, -half, base_z)
@@ -341,7 +341,6 @@ def draw_shark():
     p4 = (15, 35)
     p5 = (18, 38)
 
-    
     glBegin(GL_TRIANGLES)
     # Upper body
     glVertex3f(p0[0], -w2, p0[1])
@@ -442,13 +441,54 @@ def draw_sharks():
         draw_shark()
         glPopMatrix()
 
+######## feature 4 ##########
+def increment_bubble_speed(bubble):
+        bubble["speed"] *= 2.0 
+
+def create_bubble():
+    x = random.uniform(-GRID_LENGTH, GRID_LENGTH)
+    y = random.uniform(-GRID_LENGTH, GRID_LENGTH)
+    z = 0  # start from ocean floor
+    size = random.uniform(BUBBLE_MIN_SIZE, BUBBLE_MAX_SIZE)
+    speed = BUBBLE_SPEED * random.uniform(0.8, 1.2)
+    return {"x": x, "y": y, "z": z, "size": size, "speed": speed, "on": True}
+def update_bubbles():
+    global bubble_list, bubble_speed_multiplier
+    # Add new bubbles if below max count
+    while len(bubble_list) < MAX_BUBBLES:
+        bubble_list.append(create_bubble())
+    t = time.perf_counter()
+    for bubble in bubble_list:
+       
+        bubble["z"] += bubble["speed"] * bubble_speed_multiplier
+     
+        wave = WAVE_AMPLITUDE*2*math.sin((bubble["x"]*0.02 + t*2.0)) + WAVE_AMPLITUDE*math.cos((bubble["y"]*0.015 - t*1.5))
+        if bubble["z"] >= WATER_HEIGHT + wave:
+           
+            bubble["x"] = random.uniform(-GRID_LENGTH, GRID_LENGTH)
+            bubble["y"] = random.uniform(-GRID_LENGTH, GRID_LENGTH)
+            bubble["z"] = 0
+            bubble["size"] = random.uniform(BUBBLE_MIN_SIZE, BUBBLE_MAX_SIZE)
+            bubble["speed"] = BUBBLE_SPEED * random.uniform(0.8, 1.2)
+def draw_bubbles():
+    if is_night_mode:
+        glColor3f(0.8, 0.8, 1.0)  #light blue
+    else:
+        glColor3f(1.0, 1.0, 1.0)  # white bubbles
+    for bubble in bubble_list:
+        glPushMatrix()
+        glTranslatef(bubble["x"], bubble["y"], bubble["z"])
+        glutSolidSphere(bubble["size"], 10, 10)
+        glPopMatrix()
 
 
 def draw_shapes():
     draw_water_volume()
     draw_ocean_objects()
     trash_cleaning()
+    draw_bubbles()
     draw_sharks()
+    
 ########### Feature 7 ###############
 def setupCamera():
     global camera_radius, camera_angle, camera_height, fp_active, camera
@@ -549,7 +589,7 @@ def generate_fish(x, y, z):
 
 
 def keyboardListener(key, x, y):
-    global camera, fp_active, FP_ANGLE, trash_items,draw_trash_enabled, is_night_mode,feeding_mode,_last_trash_spawn_ms
+    global camera, fp_active, FP_ANGLE, trash_items,draw_trash_enabled, is_night_mode,feeding_mode,_last_trash_spawn_ms,bubble_speed_multiplier
     if key == b'l' :
         is_night_mode = False
         #fish colors to their day mode colorr
@@ -562,9 +602,10 @@ def keyboardListener(key, x, y):
         for fish in fish_list:
             fish["body_color"] = random.choice(neon_colors)
             fish["tail_color"] = random.choice(neon_colors)
-    elif key == b'e':
-       feeding_mode = not feeding_mode
-       return
+    elif key == b'i':  # Speed up bubbles
+        bubble_speed_multiplier *= 2.0
+    elif key == b'r':  # Reset bubbles to normal speed
+        bubble_speed_multiplier = 1.0
     if key == b'f':
         fp_active = not fp_active  # first-person mode
         return
@@ -608,10 +649,13 @@ def specialKeyListener(key, x, y):
         camera_angle += 5
 
 def mouseListener(button, state, x, y):
+    global feeding_mode
     if button == GLUT_LEFT_BUTTON and state == GLUT_DOWN:
         rand_x = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
         rand_y = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
         generate_fish(rand_x, rand_y, 40) 
+    if button == GLUT_RIGHT_BUTTON and state == GLUT_DOWN:
+        feeding_mode = not feeding_mode
 
 def idle():
     global last_update_time
@@ -620,6 +664,7 @@ def idle():
     last_update_time = current_time
     update_sharks(dt)  
     update_fish_positions() 
+    update_bubbles()
     glutPostRedisplay()
 
 def showScreen():
