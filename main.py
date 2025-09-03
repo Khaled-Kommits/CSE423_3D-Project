@@ -73,6 +73,16 @@ neon_colors = [
     (0.25, 1.0, 0.85), 
     (0.8, 0.4, 1.0)]
 
+# Sharks
+SHARK_SPAWN_INTERVAL_MS = 15000 
+MAX_SHARKS = 4  
+sharks = [] 
+_last_shark_spawn_ms = 0  
+SHARK_SPEED = 50.0 
+last_update_time = time.perf_counter() 
+
+
+
 ##### feature 10 #######
 feeding_mode = False
 food_items = []  #[x, y, z, is_active]
@@ -175,41 +185,57 @@ def draw_ocean_objects():
         draw_coral(cx, cy, CORAL_HEIGHTS)
     for (rx, ry) in rock_positions:
         draw_rock(rx, ry)
-
 def draw_water_volume():
     half = GRID_LENGTH
-    base_z = 0.0
-    top_z = base_z + WATER_HEIGHT
+    overall_base_z = 0.0
+    overall_top_z = overall_base_z + WATER_HEIGHT
 
-    wall_color = (0.68, 0.85, 0.90)
-    glColor3f(*wall_color)
-    glBegin(GL_QUADS)
-    # +X
-    glVertex3f( half, -half, base_z)
-    glVertex3f( half,  half, base_z)
-    glVertex3f( half,  half, top_z)
-    glVertex3f( half, -half, top_z)
-    # -X
-    glVertex3f(-half, -half, base_z)
-    glVertex3f(-half,  half, base_z)
-    glVertex3f(-half,  half, top_z)
-    glVertex3f(-half, -half, top_z)
-    # +Y
-    glVertex3f(-half,  half, base_z)
-    glVertex3f( half,  half, base_z)
-    glVertex3f( half,  half, top_z)
-    glVertex3f(-half,  half, top_z)
-    # -Y
-    glVertex3f(-half, -half, base_z)
-    glVertex3f( half, -half, base_z)
-    glVertex3f( half, -half, top_z)
-    glVertex3f(-half, -half, top_z)
-    glEnd()
+    # Four layers with colors from darker (bottom) to lighter (top)
+    num_layers = 4
+    layer_height = WATER_HEIGHT / num_layers
+    colors = [
+        (0.2, 0.4, 0.6),  
+        (0.25, 0.5, 0.7), 
+        (0.3, 0.6, 0.8),  
+        (0.35, 0.7, 0.9)  
+    ]
 
-    #Wavy surface
+    
+    for l in range(num_layers):
+        base_z = overall_base_z + l * layer_height
+        top_z = base_z + layer_height
+        glColor3f(*colors[l])
+        glBegin(GL_QUADS)
+        # +X
+        glVertex3f(half, -half, base_z)
+        glVertex3f(half, half, base_z)
+        glVertex3f(half, half, top_z)
+        glVertex3f(half, -half, top_z)
+
+        # -X
+        glVertex3f(-half, -half, base_z)
+        glVertex3f(-half, half, base_z)
+        glVertex3f(-half, half, top_z)
+        glVertex3f(-half, -half, top_z)
+
+        # +Y
+        glVertex3f(-half, half, base_z)
+        glVertex3f(half, half, base_z)
+        glVertex3f(half, half, top_z)
+        glVertex3f(-half, half, top_z)
+
+        # -Y
+        glVertex3f(-half, -half, base_z)
+        glVertex3f(half, -half, base_z)
+        glVertex3f(half, -half, top_z)
+        glVertex3f(-half, -half, top_z)
+        glEnd()
+
+    # Wavy surface
     t = time.perf_counter()
     step = (half * 2.0) / float(WAVE_SUBDIV)
     start = -half
+
     glBegin(GL_QUADS)
     for i in range(WAVE_SUBDIV):
         for j in range(WAVE_SUBDIV):
@@ -218,12 +244,12 @@ def draw_water_volume():
             x1 = x0 + step
             y1 = y0 + step
 
-            z00 = top_z + math.sin((x0*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y0*0.015 - t*1.5)) * WAVE_AMPLITUDE
-            z01 = top_z + math.sin((x0*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y1*0.015 - t*1.5)) * WAVE_AMPLITUDE
-            z10 = top_z + math.sin((x1*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y0*0.015 - t*1.5)) * WAVE_AMPLITUDE
-            z11 = top_z + math.sin((x1*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y1*0.015 - t*1.5)) * WAVE_AMPLITUDE
+            z00 = overall_top_z + math.sin((x0*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y0*0.015 - t*1.5)) * WAVE_AMPLITUDE
+            z01 = overall_top_z + math.sin((x0*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y1*0.015 - t*1.5)) * WAVE_AMPLITUDE
+            z10 = overall_top_z + math.sin((x1*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y0*0.015 - t*1.5)) * WAVE_AMPLITUDE
+            z11 = overall_top_z + math.sin((x1*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y1*0.015 - t*1.5)) * WAVE_AMPLITUDE
 
-            glColor3f(0.4, 0.7, 0.9) 
+            glColor3f(0.35, 0.7, 0.9) 
             glVertex3f(x0, y0, z00)
             glVertex3f(x1, y0, z10)
             glVertex3f(x1, y1, z11)
@@ -301,11 +327,128 @@ def trash_cleaning():
             draw_trash_bag()
         glPopMatrix()
 
+
+def draw_shark():
+    glColor3f(0.4, 0.4, 0.5)  
+    w2 = 5.0  
+  
+    glScalef(4.0, 4.0, 4.0)
+
+    p0 = (10, 40)
+    p1 = (20, 45)
+    p2 = (35, 40)
+    p3 = (20, 35)
+    p4 = (15, 35)
+    p5 = (18, 38)
+
+    
+    glBegin(GL_TRIANGLES)
+    # Upper body
+    glVertex3f(p0[0], -w2, p0[1])
+    glVertex3f(p1[0], -w2, p1[1])
+    glVertex3f(p2[0], -w2, p2[1])
+    # Lower body
+    glVertex3f(p4[0], -w2, p4[1])
+    glVertex3f(p3[0], -w2, p3[1])
+    glVertex3f(p2[0], -w2, p2[1])
+    # Face
+    glVertex3f(p0[0], -w2, p0[1])
+    glVertex3f(p5[0], -w2, p5[1])
+    glVertex3f(p4[0], -w2, p4[1])
+    glEnd()
+
+    # Draw back face (y = w2) using triangles
+    glBegin(GL_TRIANGLES)
+    # Upper body
+    glVertex3f(p0[0], w2, p0[1])
+    glVertex3f(p1[0], w2, p1[1])
+    glVertex3f(p2[0], w2, p2[1])
+    # Lower body
+    glVertex3f(p4[0], w2, p4[1])
+    glVertex3f(p3[0], w2, p3[1])
+    glVertex3f(p2[0], w2, p2[1])
+    # Face
+    glVertex3f(p0[0], w2, p0[1])
+    glVertex3f(p5[0], w2, p5[1])
+    glVertex3f(p4[0], w2, p4[1])
+    glEnd()
+
+    # Draw side faces using quads (connecting front and back)
+    body_points = [p0, p1, p2, p3, p4, p5]
+    glBegin(GL_QUADS)
+    for i in range(len(body_points)):
+        x1, z1 = body_points[i]
+        x2, z2 = body_points[(i + 1) % len(body_points)]
+        glVertex3f(x1, -w2, z1)
+        glVertex3f(x2, -w2, z2)
+        glVertex3f(x2, w2, z2)
+        glVertex3f(x1, w2, z1)
+    glEnd()
+
+
+    glBegin(GL_TRIANGLES)
+    glVertex3f(15, 0, 33)  
+    glVertex3f(30, 0, 33) 
+    glVertex3f(18, 0, 60)  
+    glEnd()
+
+    glBegin(GL_TRIANGLES)
+    glVertex3f(18, 0, 32)
+    glVertex3f(20, 0, 5)
+    glVertex3f(25, 0, 32)
+    glEnd()
+
+
+    glBegin(GL_TRIANGLES)
+    glVertex3f(35, 0, 40)
+    glVertex3f(45, 0, 50)
+    glVertex3f(45, 0, 30)
+    glEnd()
+
+def spawn_shark():
+    x = random.uniform(-GRID_LENGTH + 50, GRID_LENGTH - 50)
+    y = random.uniform(-GRID_LENGTH + 50, GRID_LENGTH - 50)
+    z = random.uniform(100, WATER_HEIGHT - 50)
+    angle = random.uniform(0, 360)
+    sharks.append([x, y, z, angle])  
+
+def update_sharks(dt):
+    global _last_shark_spawn_ms
+    now = get_time_ms()
+    if len(sharks) < MAX_SHARKS and now - _last_shark_spawn_ms >= SHARK_SPAWN_INTERVAL_MS:
+        spawn_shark()
+        _last_shark_spawn_ms = now
+
+    new_sharks = []
+    for shark in sharks:
+        x, y, z, angle = shark
+        rad = math.radians(angle)
+        dx = -math.cos(rad) * SHARK_SPEED * dt  
+        dy = -math.sin(rad) * SHARK_SPEED * dt
+        new_x = x + dx
+        new_y = y + dy
+        if abs(new_x) < GRID_LENGTH and abs(new_y) < GRID_LENGTH:
+            shark[0] = new_x
+            shark[1] = new_y
+            new_sharks.append(shark)
+    sharks[:] = new_sharks
+
+def draw_sharks():
+    for shark in sharks:
+        x, y, z, angle = shark
+        glPushMatrix()
+        glTranslatef(x, y, z)
+        glRotatef(angle, 0, 0, 1)
+        draw_shark()
+        glPopMatrix()
+
+
+
 def draw_shapes():
     draw_water_volume()
     draw_ocean_objects()
     trash_cleaning()
-
+    draw_sharks()
 ########### Feature 7 ###############
 def setupCamera():
     global camera_radius, camera_angle, camera_height, fp_active, camera
@@ -371,19 +514,19 @@ def draw_fish(x, y, z, size, speed, body_color, tail_color, rotation):
     gluSphere(gluNewQuadric(), size * 0.15, 10, 10)  
     glPopMatrix()
 
-def update_fish_positions():
+def update_fish_positions(): 
     global fish_list
+    speed_multiplier = 10.0 if len(sharks) > 0 else 1.0  # Double fish speed if any shark is present
     for fish in fish_list:
         radians = math.radians(fish["rotation"])
-        fish["x"] += (fish["speed"]) * math.cos(radians)  
-        fish["z"] += (fish["speed"]) * math.sin(radians)  
-        
-        if fish["x"] < -GRID_LENGTH + fish["size"] or fish["x"] > GRID_LENGTH - fish['size']:
-            fish["rotation"] += 180  
-        if fish["z"] < fish["size"] or fish["z"] > GRID_LENGTH // 2:
+        fish["x"] += fish["speed"] * speed_multiplier * math.cos(radians)  
+        fish["y"] += fish["speed"] * speed_multiplier * math.sin(radians) 
+        if fish["x"] < -GRID_LENGTH + fish["size"] or fish["x"] > GRID_LENGTH - fish["size"]: 
+            fish["rotation"] += 180 
+        if fish["y"] < -GRID_LENGTH + fish["size"] or fish["y"] > GRID_LENGTH - fish["size"]:  
             fish["rotation"] += 180  
     if len(fish_list) > MAX_FISH:
-        fish_list.pop(0) 
+        fish_list.pop(0)
     # Enforce dynamic cap derived from MAX_FISH and trash count
     dyn_max = get_dynamic_max_fish()
     while len(fish_list) > dyn_max:
@@ -471,8 +614,13 @@ def mouseListener(button, state, x, y):
         generate_fish(rand_x, rand_y, 40) 
 
 def idle():
-  update_fish_positions() 
-  glutPostRedisplay()
+    global last_update_time
+    current_time = time.perf_counter()
+    dt = current_time - last_update_time
+    last_update_time = current_time
+    update_sharks(dt)  
+    update_fish_positions() 
+    glutPostRedisplay()
 
 def showScreen():
     if is_night_mode:
