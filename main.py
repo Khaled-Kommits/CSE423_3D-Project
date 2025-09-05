@@ -35,7 +35,7 @@ WAVE_SUBDIV    = 28
 
 fp_active = False
 camera = [0.0, 0.0]
-EYE_HEIGHT = 100
+EYE_HEIGHT = 150
 FP_SPEED   = 25.0
 FP_ANGLE   = 0.0
 ROT_SPEED  = 5.0
@@ -98,6 +98,14 @@ FOOD_RADIUS = 8
 FOOD_FALL_SPEED = 2.5
 FOOD_SPAWN_INTERVAL_MS = 3000
 MAX_FOOD_ITEMS = 10
+
+#### feature 13 #########
+treasure_mode=False
+TREASURE_SIZE = 60
+treasure_pos = [0, 0, 0]
+TREASURE_STEP = 10  
+collison=False
+
 ####### feature 12 ###########
 TRASH_CAP_START = 10
 def get_dynamic_max_fish():
@@ -184,6 +192,8 @@ def draw_ocean_objects():
         draw_coral(cx, cy, CORAL_HEIGHTS)
     for (rx, ry) in rock_positions:
         draw_rock(rx, ry)
+
+###### feature 9 #########
 def draw_water_volume():
     global is_night_mode
     half = GRID_LENGTH
@@ -303,7 +313,6 @@ def draw_trash_bag():
 
 def spawn_trash_once():
     global trash_created_count
-
     x = random.randint(-GRID_LENGTH + TRASH_MARGIN, GRID_LENGTH - TRASH_MARGIN)
     y = random.randint(-GRID_LENGTH + TRASH_MARGIN, GRID_LENGTH - TRASH_MARGIN)
     type_id = random.randint(0, 1) # 0=bottle, 1=bag
@@ -335,7 +344,7 @@ def trash_cleaning():
 ####### feature 3 #########
 def draw_shark():
     glColor3f(0.4, 0.4, 0.5)  
-    w2 = 5.0  
+    w2 = 1.5
   
     glScalef(4.0, 4.0, 4.0)
 
@@ -389,10 +398,9 @@ def draw_shark():
         glVertex3f(x1, w2, z1)
     glEnd()
 
-
     glBegin(GL_TRIANGLES)
-    glVertex3f(15, 0, 33)  
-    glVertex3f(30, 0, 33) 
+    glVertex3f(15, 0, 34)  
+    glVertex3f(30, 0, 34) 
     glVertex3f(18, 0, 60)  
     glEnd()
 
@@ -401,7 +409,6 @@ def draw_shark():
     glVertex3f(20, 0, 5)
     glVertex3f(25, 0, 32)
     glEnd()
-
 
     glBegin(GL_TRIANGLES)
     glVertex3f(35, 0, 40)
@@ -486,14 +493,55 @@ def draw_bubbles():
         glutSolidSphere(bubble["size"], 10, 10)
         glPopMatrix()
 
+###feature 13 ####
+###################################################################
+def spawn_treasure_bottom():
+    global treasure_pos,collison
+    x = random.uniform(-GRID_LENGTH, GRID_LENGTH)
+    y = random.uniform(-GRID_LENGTH, GRID_LENGTH)
+    treasure_pos = [x, y, 0]
+
+def draw_treasure():
+    x, y, z = treasure_pos
+    glPushMatrix()
+    glTranslatef(x, y, z + TREASURE_SIZE / 2)  
+    if is_night_mode:
+        glColor3f(1.0, 0.6, 0.4)  # brown color
+    else:
+        glColor3f(1.0, 0.84, 0.0)  
+    glutSolidCube(TREASURE_SIZE)
+    glPopMatrix()
+
+def check_collision(x, y):
+    # Water boundary check
+    half = GRID_LENGTH
+    if x - TREASURE_SIZE/2 < -half or x + TREASURE_SIZE/2 > half:
+        return True
+    if y - TREASURE_SIZE/2 < -half or y + TREASURE_SIZE/2 > half:
+        return True
+
+    # Check corals
+    for cx, cy in coral_positions:
+        if abs(x - cx) < TREASURE_SIZE + 10 and abs(y - cy) < TREASURE_SIZE + 10:
+            return True
+    # Check rocks
+    for rx, ry in rock_positions:
+        if abs(x - rx) < TREASURE_SIZE + 20 and abs(y - ry) < TREASURE_SIZE + 20:
+            return True
+    return False
 
 def draw_shapes():
     draw_water_volume()
-    draw_ocean_objects()
-    trash_cleaning()
-    draw_bubbles()
-    draw_sharks()
-    
+    if treasure_mode:
+        draw_treasure()
+    else:
+        for fish in fish_list:
+            glEnable(GL_DEPTH_TEST)
+            draw_fish(fish["x"], fish["y"], fish["z"], fish["size"], fish["speed"], fish["body_color"], fish["tail_color"], fish["rotation"])
+            glDisable(GL_DEPTH_TEST)
+        trash_cleaning()
+        draw_bubbles()
+
 ########### Feature 7 ###############
 def setupCamera():
     global camera_radius, camera_angle, camera_height, fp_active, camera
@@ -594,7 +642,7 @@ def generate_fish(x, y, z):
 
 
 def keyboardListener(key, x, y):
-    global camera, fp_active, FP_ANGLE, trash_items,draw_trash_enabled, is_night_mode,feeding_mode,_last_trash_spawn_ms,bubble_speed_multiplier
+    global camera, fp_active, FP_ANGLE, trash_items,draw_trash_enabled, is_night_mode,feeding_mode,_last_trash_spawn_ms,bubble_speed_multiplier,treasure_mode
     if key == b'l' :
         is_night_mode = False
         #fish colors to their day mode colorr
@@ -619,6 +667,48 @@ def keyboardListener(key, x, y):
         draw_trash_enabled = True
         _last_trash_spawn_ms = get_time_ms() - TRASH_SPAWN_INTERVAL_MS
         return
+    elif key == b't' or key == b'T':  # Toggle treasure mode (works in both modes)
+        treasure_mode = not treasure_mode
+        if treasure_mode:
+            spawn_treasure_bottom()
+        print("Treasure Mode:", "ON" if treasure_mode else "OFF")
+        return
+    
+    if not treasure_mode:
+        if key == b'i' or key == b'I':  # Speed up bubbles
+            bubble_speed_multiplier *= 2.0
+        elif key == b'r' or key == b'R':  # Reset bubbles to normal speed
+            bubble_speed_multiplier = 1.0
+        elif is_night_mode == False:
+            for fish in fish_list:
+                fish["body_color"] = random.choice(day_colors)
+                fish["tail_color"] = random.choice(tail_colors)
+        elif is_night_mode == True:
+            for fish in fish_list:
+                fish["body_color"] = random.choice(neon_colors)
+                fish["tail_color"] = random.choice(neon_colors)
+    elif treasure_mode:  # In treasure mode
+        new_x, new_y = treasure_pos[0], treasure_pos[1]
+
+        if key == b'j' or key == b'J':  # Move left
+            new_x -= TREASURE_STEP
+        elif key == b'p' or key == b'P':  # Move right
+            new_x += TREASURE_STEP
+        elif key == b'k' or key == b'K':  # Move forward (+y)
+            new_y += TREASURE_STEP
+        elif key == b'o' or key == b'O':  # Move backward (-y)
+            new_y -= TREASURE_STEP
+        elif key == b'q' or key == b'Q':
+            treasure_mode = False
+            return
+        
+        # Check for collision with new position
+        if not check_collision(new_x, new_y):
+            treasure_pos[0] = new_x
+            treasure_pos[1] = new_y
+        else:
+            # If collision detected, respawn the treasure
+            spawn_treasure_bottom()
     if not fp_active:
         return
 
@@ -658,7 +748,7 @@ def mouseListener(button, state, x, y):
     if button == GLUT_LEFT_BUTTON and state == GLUT_DOWN:
         rand_x = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
         rand_y = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
-        generate_fish(rand_x, rand_y, 40) 
+        generate_fish(rand_x, rand_y,random.uniform(150, WATER_HEIGHT - 150)) 
     if button == GLUT_RIGHT_BUTTON and state == GLUT_DOWN:
         feeding_mode = not feeding_mode
 
@@ -697,8 +787,8 @@ def showScreen():
     draw_shapes()
     glEnable(GL_DEPTH_TEST)
     update_and_draw_food()
-    for fish in fish_list:
-        draw_fish(fish["x"], fish["y"], fish["z"], fish["size"], fish["speed"], fish["body_color"], fish["tail_color"], fish["rotation"])
+    draw_ocean_objects()
+    draw_sharks()
     glDisable(GL_DEPTH_TEST)
     glutSwapBuffers()
 
