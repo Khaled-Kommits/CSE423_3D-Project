@@ -73,6 +73,7 @@ neon_colors = [
     (0.25, 1.0, 0.85), 
     (0.8, 0.4, 1.0)]
 
+######## feature 3 #########
 # Sharks
 SHARK_SPAWN_INTERVAL_MS = 15000 
 MAX_SHARKS = 4  
@@ -94,18 +95,11 @@ bubble_speed_multiplier = 1.0
 feeding_mode = False
 food_items = []  #[x, y, z, is_active]
 FOOD_RADIUS = 8
-FOOD_FALL_SPEED = 1.5
+FOOD_FALL_SPEED = 2.5
 FOOD_SPAWN_INTERVAL_MS = 3000
 MAX_FOOD_ITEMS = 10
 ####### feature 12 ###########
 TRASH_CAP_START = 10
-def get_dynamic_max_fish():
-    t = len(trash_items)
-    if t < TRASH_CAP_START:
-        return MAX_FISH
-    steps = 1 + (t - TRASH_CAP_START) // 5   
-    return max(0, MAX_FISH - 5 * steps)
-
 def get_dynamic_max_fish():
     t = len(trash_items)
     if t < TRASH_CAP_START:
@@ -191,6 +185,7 @@ def draw_ocean_objects():
     for (rx, ry) in rock_positions:
         draw_rock(rx, ry)
 def draw_water_volume():
+    global is_night_mode
     half = GRID_LENGTH
     overall_base_z = 0.0
     overall_top_z = overall_base_z + WATER_HEIGHT
@@ -202,12 +197,20 @@ def draw_water_volume():
         (0.2, 0.4, 0.6),  
         (0.25, 0.5, 0.7), 
         (0.3, 0.6, 0.8),  
-        (0.35, 0.7, 0.9)  ]
+        (0.35, 0.7, 0.9) ]
+    night_color= [
+       (0.08, 0.24, 0.48),  
+       (0.1, 0.3, 0.56),     
+       (0.12, 0.36, 0.64),   
+       (0.14, 0.42, 0.72)]
 
     for l in range(num_layers):
         base_z = overall_base_z + l * layer_height
         top_z = base_z + layer_height
-        glColor3f(*colors[l])
+        if is_night_mode:
+            glColor3f(*night_color[l])
+        else:
+            glColor3f(*colors[l])
         glBegin(GL_QUADS)
         # +X
         glVertex3f(half, -half, base_z)
@@ -248,8 +251,10 @@ def draw_water_volume():
             z01 = overall_top_z + math.sin((x0*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y1*0.015 - t*1.5)) * WAVE_AMPLITUDE
             z10 = overall_top_z + math.sin((x1*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y0*0.015 - t*1.5)) * WAVE_AMPLITUDE
             z11 = overall_top_z + math.sin((x1*0.02 + t*2.0)) * WAVE_AMPLITUDE*2 + math.cos((y1*0.015 - t*1.5)) * WAVE_AMPLITUDE
-
-            glColor3f(0.35, 0.7, 0.9) 
+            if is_night_mode:
+                glColor3f(0.0, 0.0, 0.5)
+            else:
+                glColor3f(0.4, 0.7, 0.9) #light blue
             glVertex3f(x0, y0, z00)
             glVertex3f(x1, y0, z10)
             glVertex3f(x1, y1, z11)
@@ -327,7 +332,7 @@ def trash_cleaning():
             draw_trash_bag()
         glPopMatrix()
 
-
+####### feature 3 #########
 def draw_shark():
     glColor3f(0.4, 0.4, 0.5)  
     w2 = 5.0  
