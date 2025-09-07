@@ -399,15 +399,15 @@ def draw_shark():
     glEnd()
 
     glBegin(GL_TRIANGLES)
-    glVertex3f(15, 0, 34)  
-    glVertex3f(30, 0, 34) 
-    glVertex3f(18, 0, 60)  
+    glVertex3f(15, 0, 36)
+    glVertex3f(30, 0, 36)
+    glVertex3f(18, 0, 55)
     glEnd()
 
     glBegin(GL_TRIANGLES)
-    glVertex3f(18, 0, 32)
-    glVertex3f(20, 0, 5)
-    glVertex3f(25, 0, 32)
+    glVertex3f(18, 0, 36)
+    glVertex3f(20, 0, 7)
+    glVertex3f(25, 0, 36)
     glEnd()
 
     glBegin(GL_TRIANGLES)
