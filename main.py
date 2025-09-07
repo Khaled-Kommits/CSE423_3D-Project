@@ -929,7 +929,7 @@ def keyboardListener(key, x, y):
             new_x -= TREASURE_STEP
         elif key == b'p' or key == b'P':  # Move right
             new_x += TREASURE_STEP
-        elif key == b'l' or key == b'L':  # Move forward (+y)
+        elif key == b'k' or key == b'K':  # Move forward (+y)
             new_y += TREASURE_STEP
         elif key == b'o' or key == b'O':  # Move backward (-y)
             new_y -= TREASURE_STEP
@@ -990,7 +990,7 @@ def mouseListener(button, state, x, y):
         rand_x = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
         rand_y = random.randint(-GRID_LENGTH // 2, GRID_LENGTH // 2)
         generate_fish(rand_x, rand_y,random.uniform(150, WATER_HEIGHT - 150))
-    if button == GLUT_RIGHT_BUTTON and state == GLUT_DOWN:
+    if button == GLUT_RIGHT_BUTTON and state == GLUT_DOWN and not treasure_mode:
         feeding_mode = not feeding_mode
 
 def idle():
